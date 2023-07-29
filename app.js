@@ -122,7 +122,7 @@ app.get("/", async (req, res) => {
     const user = await getUsersData();
     res.json(user);
   } catch (err) {
-    res.status(500).json({ message: "Error fetching data" });
+    res.status(500).json({ message: "Error fetching data." });
   }
 });
 
