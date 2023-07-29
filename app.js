@@ -57,7 +57,6 @@ async function getUsersData() {
       "https://www.fakexy.com/fake-address-generator-id"
     );
     const text = await response.text();
-    return text;
 
     if (!text.includes("Indonesia address")) {
       return res.status(500).json({ message: "Error fetching data" });
@@ -121,7 +120,7 @@ app.use((req, res, next) => {
 app.get("/", async (req, res) => {
   try {
     const user = await getUsersData();
-    res.text(user);
+    res.json(user);
   } catch (err) {
     res.status(500).json({ message: "Error fetching data." });
   }
