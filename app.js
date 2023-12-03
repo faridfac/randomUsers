@@ -3,18 +3,18 @@ const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const crypto = require("crypto");
 const uuid = require("uuid");
-const { Wallet, ethers } = require("ethers");
-
+const { ethers } = require("ethers");
 const app = express();
 const port = 3000;
 
-function createAccountEth() {
+function createWallet() {
   const wallet = ethers.Wallet.createRandom();
-  const privateKey = wallet.privateKey;
-  const publicKey = wallet.publicKey;
+
   return {
-    privateKey,
-    publicKey,
+    privateKey: wallet.privateKey,
+    mnemonic: wallet.mnemonic.phrase,
+    address: wallet.address,
+    publicKey: wallet.publicKey,
   };
 }
 
@@ -81,8 +81,7 @@ async function getUsersData() {
     const email = `${username}@gmail.com`;
     const sha1 = crypto.createHash("sha1").update(username).digest("hex");
     const phone = getPhone();
-    const walletNew = createAccountEth();
-    const wallet = new Wallet(walletNew.privateKey);
+    const wallet = createWallet();
 
     const obj = {
       gender: getUserData("Gender"),
@@ -107,9 +106,10 @@ async function getUsersData() {
         username: username,
         sha1: sha1,
       },
-      eth: {
+      wallet: {
         address: wallet.address,
-        privatekey: walletNew.privateKey,
+        privatekey: wallet.privateKey,
+        mnemonic: wallet.mnemonic,
       },
     };
 
