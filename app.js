@@ -3,17 +3,19 @@ const fetch = require("node-fetch");
 const cheerio = require("cheerio");
 const crypto = require("crypto");
 const uuid = require("uuid");
+const { Wallet, ethers } = require("ethers");
 
 const app = express();
 const port = 3000;
 
-function generateSHA1(string) {
-  const sha1Hash = crypto.createHash("sha1").update(string).digest("hex");
-  return sha1Hash;
-}
-
-function getUUID() {
-  return uuid.v4();
+function createAccountEth() {
+  const wallet = ethers.Wallet.createRandom();
+  const privateKey = wallet.privateKey;
+  const publicKey = wallet.publicKey;
+  return {
+    privateKey,
+    publicKey,
+  };
 }
 
 function getPhone() {
@@ -59,7 +61,7 @@ async function getUsersData() {
     const text = await response.text();
 
     if (!text.includes("Indonesia address")) {
-      return res.status(500).json({ message: "Error fetching data" });
+      throw new Error("Error fetching data");
     }
 
     const $ = cheerio.load(text);
@@ -77,9 +79,10 @@ async function getUsersData() {
       Math.random() * (999 - 10) + 10
     )}`;
     const email = `${username}@gmail.com`;
-    const sha1 = generateSHA1(username);
+    const sha1 = crypto.createHash("sha1").update(username).digest("hex");
     const phone = getPhone();
-    const userUUID = getUUID();
+    const walletNew = createAccountEth();
+    const wallet = new Wallet(walletNew.privateKey);
 
     const obj = {
       gender: getUserData("Gender"),
@@ -100,9 +103,13 @@ async function getUsersData() {
       phone: phone,
       dob: getUserData("Birthday"),
       login: {
-        uuid: userUUID,
+        uuid: uuid.v4(),
         username: username,
         sha1: sha1,
+      },
+      eth: {
+        address: wallet.address,
+        privatekey: walletNew.privateKey,
       },
     };
 
@@ -122,7 +129,7 @@ app.get("/", async (req, res) => {
     const user = await getUsersData();
     res.json(user);
   } catch (err) {
-    res.status(500).json({ message: "Error fetching data." });
+    res.status(500).json({ message: "Error fetching data" });
   }
 });
 
