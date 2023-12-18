@@ -4,6 +4,8 @@ const cheerio = require("cheerio");
 const crypto = require("crypto");
 const uuid = require("uuid");
 const { ethers } = require("ethers");
+const { Keypair } = require("@solana/web3.js");
+const bs58 = require("bs58");
 const app = express();
 const port = 3000;
 
@@ -15,6 +17,17 @@ function createWallet() {
     mnemonic: wallet.mnemonic.phrase,
     address: wallet.address,
     publicKey: wallet.publicKey,
+  };
+}
+
+function createWalletSol() {
+  const walletKeypair = Keypair.generate();
+  const secretKey = walletKeypair.secretKey;
+  const publicKey = walletKeypair.publicKey;
+
+  return {
+    privateKey: bs58.encode(secretKey),
+    address: publicKey.toBase58(),
   };
 }
 
@@ -75,13 +88,13 @@ async function getUsersData() {
     const split = name.split(" ");
     const firstname = split[0];
     const lastname = split[1];
-    const username = `${firstname.toLowerCase()}${lastname.toLowerCase()}${Math.floor(
-      Math.random() * (999 - 10) + 10
-    )}`;
-    const email = `${username}@gmail.com`;
+    const randomNum = Math.floor(Math.random() * (999 - 10 + 1)) + 10;
+    const username = `${firstname.toLowerCase()}${randomNum}`;
+    const email = `${firstname.toLowerCase()}${lastname.toLowerCase()}${randomNum}@gmail.com`;
     const sha1 = crypto.createHash("sha1").update(username).digest("hex");
     const phone = getPhone();
-    const wallet = createWallet();
+    const walletETH = createWallet();
+    const walletSOL = createWalletSol();
 
     const obj = {
       gender: getUserData("Gender"),
@@ -107,9 +120,15 @@ async function getUsersData() {
         sha1: sha1,
       },
       wallet: {
-        address: wallet.address,
-        privatekey: wallet.privateKey,
-        mnemonic: wallet.mnemonic,
+        eth: {
+          address: walletETH.address,
+          privatekey: walletETH.privateKey,
+          mnemonic: walletETH.mnemonic,
+        },
+        sol: {
+          address: walletSOL.address,
+          privatekey: walletSOL.privateKey,
+        },
       },
     };
 
@@ -129,6 +148,7 @@ app.get("/", async (req, res) => {
     const user = await getUsersData();
     res.json(user);
   } catch (err) {
+    console.log(err);
     res.status(500).json({ message: "Error fetching data" });
   }
 });
