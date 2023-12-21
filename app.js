@@ -22,7 +22,6 @@ function createWallet() {
     privateKey: wallet.privateKey,
     mnemonic: wallet.mnemonic.phrase,
     address: wallet.address,
-    publicKey: wallet.publicKey,
   };
 }
 
@@ -57,7 +56,7 @@ function createWalletSui() {
     ).join(""),
     address: keypair.getPublicKey().toSuiAddress().toString(),
   };
-
+}
 
 async function createWalletSei() {
   const mnemonic = await DirectSecp256k1HdWallet.generate(12, {
