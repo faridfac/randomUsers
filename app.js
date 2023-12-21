@@ -49,10 +49,11 @@ function createWalletAptos() {
 
 function createWalletSui() {
   const keypair = new Ed25519Keypair();
-  const secretKey = keypair.keypair.secretKey;
 
   return {
-    privateKey: secretKey.toString("hex"),
+    privateKey: Array.from(keypair.keypair.secretKey, (byte) =>
+      byte.toString(16).padStart(2, "0")
+    ).join(""),
     address: keypair.getPublicKey().toSuiAddress().toString(),
   };
 }
