@@ -7,6 +7,8 @@ const { ethers } = require("ethers");
 const { Keypair } = require("@solana/web3.js");
 const { AptosAccount } = require("aptos");
 const { Ed25519Keypair } = require("@mysten/sui.js");
+const { DirectSecp256k1HdWallet } = require("@cosmjs/proto-signing");
+const { stringToPath } = require("@cosmjs/crypto");
 const { wordlist } = require("@scure/bip39/wordlists/english");
 const bip39 = require("@scure/bip39");
 const bs58 = require("bs58");
@@ -55,7 +57,30 @@ function createWalletSui() {
     ).join(""),
     address: keypair.getPublicKey().toSuiAddress().toString(),
   };
+
+
+async function createWalletSei() {
+  const mnemonic = await DirectSecp256k1HdWallet.generate(12, {
+    prefix: "sei",
+    hdPaths: [getHdPath(0)],
+  });
+  const wallet = await DirectSecp256k1HdWallet.fromMnemonic(
+    mnemonic.secret.data,
+    {
+      prefix: "sei",
+      hdPaths: [getHdPath(0)],
+    }
+  );
+  const accounts = await wallet.getAccounts();
+
+  return {
+    mnemonic: mnemonic.secret.data,
+    address: accounts[0].address,
+  };
 }
+
+const getHdPath = (accountIndex = 0) =>
+  stringToPath(`m/44'/118'/0'/0/${accountIndex}`);
 
 function getPhone() {
   const prefixes = [
@@ -123,6 +148,7 @@ async function getUsersData() {
     const walletSOL = createWalletSol();
     const walletAPTOS = createWalletAptos();
     const walletSUI = createWalletSui();
+    const walletSEI = await createWalletSei();
 
     const obj = {
       gender: getUserData("Gender"),
@@ -164,6 +190,10 @@ async function getUsersData() {
         sui: {
           address: walletSUI.address,
           privatekey: walletSUI.privateKey,
+        },
+        sei: {
+          address: walletSEI.address,
+          mnemonic: walletSEI.mnemonic,
         },
       },
     };
